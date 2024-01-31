@@ -1,0 +1,88 @@
+/dts-v1/;
+
+/ {
+	description = "Configuration to load OpenSBI (dynamic), EDK2, EDK2_SMM, FDT";
+	#address-cells = <1>;
+	fit,fdt-list = "of-list";
+
+	images {
+		opensbi {
+			description = "OpenSBI fw_dynamic Firmware";
+			data = /incbin/("fw_dynamic.bin");
+			type = "firmware";
+			os = "opensbi";
+			arch = "riscv";
+			compression = "none";
+			load = <0x40000000>;
+			entry = <0x40000000>;
+			opensbi_blob: opensbi {
+				filename = "fw_dynamic.bin";
+			};
+			hash {
+				algo = "sha256";
+			};
+		};
+
+		edk2 {
+			description = "EDK2 UEFI Firmware";
+			data = /incbin/("VISIONFIVE2.fd");
+			type = "loadables";
+			os = "U-Boot";
+			arch = "riscv";
+			compression = "none";
+			load = <0x40200000>;
+			edk2_blob: blob-ext {
+				filename = "VISIONFIVE2.fd";
+			};
+			hash {
+				algo = "sha256";
+			};
+		};
+
+		edk2smm {
+			description = "EDK2 UEFI Firmware";
+			data = /incbin/("STANDALONE_MM.fd");
+			type = "loadables";
+			os = "efi";
+			arch = "riscv";
+			compression = "none";
+			load = <0x40C00000>;
+			edk2smm_blob: blob-ext {
+				filename = "STANDALONE_MM.fd";
+			};
+			hash {
+				algo = "sha256";
+			};
+		};
+
+		fdt {
+			description = "OpenSBI/EDK2 device tree binary";
+			data = /incbin/("StarFiveVisionFive2.dtb");
+			type = "loadables";
+			arch = "riscv";
+			compression = "none";
+			load = <0x40A00000>;
+			fdt_blob: blob-ext {
+				filename = "StarFiveVisionFive2.dtb";
+			};
+			hash {
+				algo = "sha256";
+			};
+		};
+	};
+
+	configurations {
+		default = "conf";
+		conf {
+			description = "Starfive Dubhe FPGA";
+			firmware = "opensbi";
+			loadables = "edk2", "edk2smm";
+			fdt = "fdt";
+			signature {
+				algo = "sha256,rsa2048";
+				key-name-hint = "VF2_fit_key";
+				sign-images = "firmware", "fdt", "loadables";
+			};
+		};
+	};
+};
